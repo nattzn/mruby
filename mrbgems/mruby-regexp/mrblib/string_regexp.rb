@@ -74,17 +74,21 @@ class String
 
   # Regexp-aware split.  Falls back to the C-defined split (aliased as
   # `__split` in mrb_mruby_regexp_gem_init before this override loads) for
-  # nil or simple-string patterns; converts string-with-backslash to a
-  # Regexp and handles regexp patterns in Ruby.
-  def split(pattern = nil, limit = -1)
-    return __split(pattern, limit) if pattern.nil?
-    if pattern.is_a?(String)
-      return __split(pattern, limit) if pattern.length == 1 || !pattern.include?('\\')
-      pattern = Regexp.new(Regexp.escape(pattern))
+  # nil or string patterns, and handles regexp patterns in Ruby.
+  def split(pattern = nil, *args)
+    if args.length > 1
+      raise ArgumentError, "wrong number of arguments (given #{args.length+1}, expected 0..2)"
+    end
+
+    limit_given = args.length > 0
+    limit = limit_given ? args[0] : 0
+    if pattern.nil? || pattern.is_a?(String)
+      return limit_given ? __split(pattern, limit) : __split(pattern)
     end
     result = []
     rest = self
     count = 0
+    return result if rest.length == 0
     while rest.length > 0
       if limit > 0 && count >= limit - 1
         result << rest
@@ -100,14 +104,17 @@ class String
         if rest.length > 0
           result[-1] = result[-1] + rest[0]
           rest = rest[1..-1] || ""
-        else
-          break
         end
+      end
+      i = 1
+      while i < md.length
+        result << md[i] unless md[i].nil?
+        i += 1
       end
     end
     result << rest
-    # remove trailing empty strings if no limit
-    if limit < 0
+    # remove trailing empty strings if no limit or zero limit
+    if !limit_given || limit == 0
       while result.length > 0 && result[-1] == ""
         result.pop
       end

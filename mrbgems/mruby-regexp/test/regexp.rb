@@ -374,6 +374,20 @@ end
 
 assert("String#split with regexp") do
   assert_equal ["a", "b", "c"], "a, b, c".split(/,\s*/)
+  assert_equal ["a", "b", "c"], "abc".split(//)
+  assert_equal ["a", "b", "c", ""], "abc".split(//, -1)
+  assert_equal [], "".split(//, -1)
+  assert_equal [], "".split(/,/, -1)
+  assert_equal [], "".split(/,/, 1)
+  assert_equal ["a", "1", "b", "2", "c"], "a1b2c".split(/(\d)/)
+  assert_equal ["a", "1", "b2c"], "a1b2c".split(/(\d)/, 2)
+  assert_equal ["a", "1", "b", "2", "c"], "a1b2c".split(/(\d)/, 3)
+end
+
+assert("String#split with string") do
+  assert_equal ["a", "b", "c"], "abc".split("")
+  assert_equal ["a", "b", "c", ""], "abc".split("", -1)
+  assert_equal ["い", "は"], "いろは".split("ろ")
 end
 
 assert("Regexp - case in when") do
