@@ -401,9 +401,24 @@ regexp_escape(mrb_state *mrb, mrb_value self)
   for (mrb_int i = 0; i < len; i++) {
     char c = s[i];
     switch (c) {
+    case '\t':
+      mrb_str_cat_lit(mrb, result, "\\t");
+      break;
+    case '\n':
+      mrb_str_cat_lit(mrb, result, "\\n");
+      break;
+    case '\v':
+      mrb_str_cat_lit(mrb, result, "\\v");
+      break;
+    case '\f':
+      mrb_str_cat_lit(mrb, result, "\\f");
+      break;
+    case '\r':
+      mrb_str_cat_lit(mrb, result, "\\r");
+      break;
     case '\\': case '.': case '*': case '+': case '?': case '|':
     case '(': case ')': case '[': case ']': case '{': case '}':
-    case '^': case '$':
+    case '^': case '$': case ' ': case '#': case '-':
       mrb_str_cat_lit(mrb, result, "\\");
       /* fall through */
     default:

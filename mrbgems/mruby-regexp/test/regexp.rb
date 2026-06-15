@@ -149,7 +149,10 @@ assert("MatchData#begin / #end") do
 end
 
 assert("Regexp.escape") do
-  assert_equal "a\\.b\\*c", Regexp.escape("a.b*c")
+  assert_equal "a\\.b\\*c\\#d\\-f", Regexp.escape("a.b*c#d-f")
+  assert_equal "\\.\\?\\-\\+\\*\\^\\\\\\|\\$\\(\\)\\[\\]\\{\\}", Regexp.escape(".?-+*^\\|$()[]{}")
+  assert_equal "\\t\\n\\v\\f\\r", Regexp.escape("\t\n\v\f\r")
+  assert_equal "\0\e\x7f/", Regexp.escape("\0\e\x7f/")
 end
 
 assert("Regexp#inspect") do
