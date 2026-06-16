@@ -29,10 +29,20 @@ assert("Regexp#match?") do
   assert_false re.match?("xyz")
 end
 
+assert("Regexp#match? with UTF-8 position") do
+  pos = __ENCODING__ == "UTF-8" ? 2 : 6
+  assert_true /あ/.match?("あいあ", pos)
+  assert_false /い/.match?("あいあ", pos)
+end
+
 assert("Regexp#=~") do
   re = Regexp.new("bc")
   assert_equal 1, re =~ "abcd"
   assert_nil re =~ "xyz"
+end
+
+assert("Regexp#=~ with UTF-8") do
+  assert_equal __ENCODING__ == "UTF-8" ? 1 : 3, /い/ =~ "あい"
 end
 
 assert("Regexp#===") do
@@ -138,6 +148,20 @@ assert("MatchData#pre_match / #post_match") do
   assert_equal "de", md.post_match
 end
 
+assert("MatchData UTF-8 capture strings") do
+  md = /(ろ)(は)?/.match("いろは")
+  assert_equal "ろは", md[0]
+  assert_equal "ろ", md[1]
+  assert_equal "は", md[2]
+  assert_equal ["ろは", "ろ", "は"], md.to_a
+  assert_equal ["ろ", "は"], md.captures
+  assert_equal "い", md.pre_match
+  assert_equal "", md.post_match
+  assert_equal "ろは", md.to_s
+  assert_equal "ろ", $1
+  assert_equal "は", $2
+end
+
 assert("MatchData#string") do
   md = Regexp.new("bc").match("abcde")
   assert_equal "abcde", md.string
@@ -181,6 +205,19 @@ assert("Regexp - multibyte (UTF-8) match extraction") do
   assert_equal [1, 2], [m.begin(1), m.end(1)]
   assert_equal [2, 3], [m.begin(2), m.end(2)]
   assert_equal 2, "あいう".match(/う/).begin(0)
+end
+
+assert("MatchData#begin / #end with UTF-8") do
+  pos = __ENCODING__ == "UTF-8" ? 2 : 6
+  md = /あ/.match("あいあ", pos)
+  if __ENCODING__ == "UTF-8"
+    assert_equal 2, md.begin(0)
+    assert_equal 3, md.end(0)
+  else
+    assert_equal 6, md.begin(0)
+    assert_equal 9, md.end(0)
+  end
+  assert_nil /い/.match("あいあ", pos)
 end
 
 assert("Regexp.escape") do
@@ -319,6 +356,11 @@ end
 
 assert("String#scan") do
   assert_equal ["1", "2", "3"], "a1b2c3".scan(Regexp.new("\\d"))
+  assert_equal ["あ", "い"], "あい".scan(/./)
+  assert_equal ["あ", "い"], "あい".scan(/(.)/)
+  if __ENCODING__ == "UTF-8"
+    assert_equal ["", "", ""], "いろ".scan(//)
+  end
 end
 
 assert("Regexp literal /regex/") do
@@ -382,6 +424,7 @@ end
 
 assert("String#gsub with block") do
   assert_equal "HELLO WORLD", "hello world".gsub(/\w+/) { |m| m.upcase }
+  assert_equal "-い", "あい".gsub(/あ/) { "-" }
 end
 
 assert("String#gsub with block and zero-width match") do
@@ -395,6 +438,12 @@ assert("String#gsub with block and zero-width match") do
     assert_equal "！いろは", "いろは".gsub(/^/) { "！" }
     assert_equal "い！ろは", "いろは".gsub(/(?=ろ)/) { "！" }
     assert_equal "！い！ろ！は！", "いろは".gsub(//) { "！" }
+  end
+end
+
+if __ENCODING__ == "UTF-8"
+  assert("String#gsub replacement with UTF-8 zero-width match") do
+    assert_equal "！い！ろ！は！", "いろは".gsub(//, "！")
   end
 end
 
